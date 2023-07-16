@@ -110,7 +110,7 @@ func (t *Tree) printXmlTree() {
 		fmt.Printf("%s<files>%v</files>%s", strings.Repeat(indent, 2), t.Summary.Files, newline)
 	}
 	fmt.Printf("%s</report>%s", indent, newline)
-	fmt.Printf("</tree>%s", newline)
+	fmt.Printf("</tree>\n")
 }
 
 func (t *Tree) printJsonTree() {
