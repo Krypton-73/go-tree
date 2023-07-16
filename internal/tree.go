@@ -19,27 +19,35 @@ type Tree struct {
 	Out     *bytes.Buffer
 }
 
+func NewTreeSummary(noOfDirectories int, noOfFiles int) TreeSummary {
+	return TreeSummary{
+		Directories: noOfDirectories,
+		Files:       noOfFiles,
+	}
+}
+
+func NewTree(root TreeNode, flags map[string]interface{}, summary TreeSummary, out *bytes.Buffer) Tree {
+	return Tree{
+		Root:    root,
+		Flags:   flags,
+		Summary: summary,
+		Out:     out,
+	}
+}
+
 // Draws a tree map
 func DrawTree(flags map[string]interface{}) {
 	rootPath := *(flags[constant.Root].(*string))
-
 	// Check if path is a existing directory with read permission
 	info, err := IsValid(rootPath)
 	if err != nil {
 		return
 	}
 
-	node := TreeNode{
-		Root:     nil,
-		Children: nil,
-		Depth:    0,
-		IsLast:   false,
-		Path:     rootPath,
-		Info:     info,
-	}
 	var out bytes.Buffer
-	summary := TreeSummary{Directories: 1, Files: 0}
-	tree := Tree{node, flags, summary, &out}
+	rootNode := NewTreeNode(nil, nil, 0, false, rootPath, info)
+	summary := NewTreeSummary(1, 0)
+	tree := NewTree(rootNode, flags, summary, &out)
 	tree.draw()
 }
 
@@ -52,23 +60,23 @@ func (t *Tree) draw() {
 	indent := ""
 	// draw in xml format
 	if xml := *(t.Flags[constant.XML].(*bool)); xml { // draw in xml format
-		t.Root.drawXmlTree(indent+strings.Repeat(" ", 2), t.Flags, t.Out)
+		t.Root.drawxml(indent+strings.Repeat(" ", 2), t.Flags, t.Out)
 		t.printXmlTree()
 		return
 	}
 	// draw in json format
 	if json := *(t.Flags[constant.JSON].(*bool)); json {
-		t.Root.drawJsonTree(indent+strings.Repeat(" ", 2), t.Flags, t.Out)
+		t.Root.drawjson(indent+strings.Repeat(" ", 2), t.Flags, t.Out)
 		t.printJsonTree()
 		return
 	}
-	// draw directory tree map
+	// draw tree map
 	t.Root.draw(indent, t.Flags, t.Out)
-	t.printTreeMap()
+	t.printTree()
 	return
 }
 
-func (t *Tree) printTreeMap() {
+func (t *Tree) printTree() {
 	// print tree
 	fmt.Println(t.Out)
 	// print tree summary
@@ -82,8 +90,8 @@ func (t *Tree) printTreeMap() {
 func (t *Tree) printXmlTree() {
 	newline := fmt.Sprintf("\n")
 	// print without indentation
-	hasIndent := *(t.Flags[constant.Indent].(*bool))
-	if hasIndent {
+	noIndent := *(t.Flags[constant.Indent].(*bool))
+	if noIndent {
 		newline = ""
 	}
 	fmt.Printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>%s", newline)
@@ -91,7 +99,7 @@ func (t *Tree) printXmlTree() {
 	fmt.Printf("%s", t.Out)
 	// print summary report
 	indent := strings.Repeat(" ", 2)
-	if hasIndent {
+	if noIndent {
 		indent = ""
 	}
 	fmt.Printf("%s<report>%s", indent, newline)
@@ -120,7 +128,7 @@ func (t *Tree) printJsonTree() {
 	}
 	fmt.Printf("%s{\"type\":\"report\",\"directories\":%v", indent, t.Summary.Directories)
 	if justDirs := *(t.Flags[constant.Dir].(*bool)); !justDirs {
-		fmt.Printf(",\"files\":%v", t.Summary.Directories)
+		fmt.Printf(",\"files\":%v", t.Summary.Files)
 	}
 	fmt.Printf("}%s", newline)
 	fmt.Printf("]\n")

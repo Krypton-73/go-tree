@@ -52,18 +52,18 @@ func justDirs(files []fs.DirEntry) []fs.DirEntry {
 	return dirs
 }
 
-func sortFilesByTimeModified(files []fs.DirEntry) {
+func sortByModifiedTime(files []fs.DirEntry) {
 	sort.Slice(files, func(i, j int) bool {
 		a := getFileInfo(files[i])
 		b := getFileInfo(files[j])
 		if a.ModTime().Before(b.ModTime()) {
-			return true
+			return false
 		}
-		return false
+		return true
 	})
 }
 
-func sortFilesByName(files []fs.DirEntry) {
+func sortByName(files []fs.DirEntry) {
 	sort.Slice(files, func(i, j int) bool {
 		return files[i].Name() < files[j].Name()
 	})

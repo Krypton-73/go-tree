@@ -18,6 +18,17 @@ type TreeNode struct {
 	Info     os.FileInfo
 }
 
+func NewTreeNode(root *TreeNode, children []TreeNode, depth int, isLast bool, path string, info os.FileInfo) TreeNode {
+	return TreeNode{
+		Root:     root,
+		Children: children,
+		Depth:    depth,
+		IsLast:   isLast,
+		Path:     path,
+		Info:     info,
+	}
+}
+
 func (node *TreeNode) BuildTree(flags map[string]interface{}, summary *TreeSummary) error {
 	dir, err := os.Open(node.Path)
 	if err != nil {
@@ -33,6 +44,7 @@ func (node *TreeNode) BuildTree(flags map[string]interface{}, summary *TreeSumma
 	// Skip hidden files and directories
 	files = exceptHiddens(files)
 
+	// list of directories
 	dirs := justDirs(files)
 	// Add to tree summary
 	summary.Directories += len(dirs)
@@ -41,12 +53,11 @@ func (node *TreeNode) BuildTree(flags map[string]interface{}, summary *TreeSumma
 	if justDir := *(flags[constant.Dir].(*bool)); justDir {
 		files = dirs
 	}
-
 	// Sort files by time modified
 	if sortByTime := *(flags[constant.Time].(*bool)); sortByTime {
-		sortFilesByTimeModified(files)
+		sortByModifiedTime(files)
 	} else { // Sort files by name
-		sortFilesByName(files)
+		sortByName(files)
 	}
 
 	for i, file := range files {
@@ -54,14 +65,10 @@ func (node *TreeNode) BuildTree(flags map[string]interface{}, summary *TreeSumma
 		if i+1 == len(files) {
 			isLast = true
 		}
-		childNode := TreeNode{
-			Root:     node,
-			Children: nil,
-			Depth:    node.Depth + 1,
-			IsLast:   isLast,
-			Path:     filepath.Join(node.Path, file.Name()),
-			Info:     getFileInfo(file),
-		}
+		path := filepath.Join(node.Path, file.Name())
+		info := getFileInfo(file)
+		childNode := NewTreeNode(node, nil, node.Depth+1, isLast, path, info)
+
 		maxDepth := *(flags[constant.Level].(*int))
 		// Build tree upto max level
 		if childNode.Info.IsDir() && (maxDepth == 0 || childNode.Depth < maxDepth) {
@@ -81,7 +88,6 @@ func (node *TreeNode) draw(indent string, flags map[string]interface{}, out *byt
 	node.print(node.addSuffix(indent), flags, out)
 
 	subIndent := node.addIndentation(indent)
-
 	for _, child := range node.Children {
 		if child.Children != nil {
 			child.draw(subIndent, flags, out)
@@ -97,25 +103,20 @@ func (node *TreeNode) print(indent string, flags map[string]interface{}, out *by
 	if hasIndent := *(flags[constant.Indent].(*bool)); hasIndent {
 		indent = ""
 	}
-
 	name := filepath.Base(node.Path)
-
 	// print full path
 	if hasPath := *(flags[constant.Path].(*bool)); hasPath || node.Root == nil {
 		name = node.Path
 	}
-
 	// print file permissions
 	if hasMode := *(flags[constant.Permission].(*bool)); hasMode && node.Root != nil {
 		name = fmt.Sprintf("[%v] %v", node.Info.Mode(), name)
 	}
-
 	// print msg if no read permission on directory
 	msg := ""
 	if node.Info.Mode().Perm()&0400 == 0 {
 		msg = fmt.Sprintf("%s[error opening dir]", strings.Repeat(" ", 4))
 	}
-
 	fmt.Fprintf(out, "%s%s%s\n", indent, name, msg)
 }
 
@@ -145,7 +146,7 @@ func (node *TreeNode) addSuffix(prefix string) string {
 }
 
 // Prints the directory tree in JSON format
-func (node *TreeNode) drawJsonTree(indent string, flags map[string]interface{}, out *bytes.Buffer) {
+func (node *TreeNode) drawjson(indent string, flags map[string]interface{}, out *bytes.Buffer) {
 	// print without indentation
 	hasIndent := *(flags[constant.Indent].(*bool))
 	if hasIndent {
@@ -174,7 +175,7 @@ func (node *TreeNode) drawJsonTree(indent string, flags map[string]interface{}, 
 					fmt.Fprintf(out, "\n")
 				}
 			}
-			child.drawJsonTree(indent+strings.Repeat(" ", 2), flags, out)
+			child.drawjson(indent+strings.Repeat(" ", 2), flags, out)
 		}
 		if !hasIndent {
 			fmt.Fprintf(out, "\n")
@@ -183,12 +184,11 @@ func (node *TreeNode) drawJsonTree(indent string, flags map[string]interface{}, 
 	} else {
 		fmt.Fprintf(out, line)
 	}
-
 	fmt.Fprintf(out, "}")
 }
 
 // Prints the directory tree in XML format.
-func (node *TreeNode) drawXmlTree(indent string, flags map[string]interface{}, out *bytes.Buffer) {
+func (node *TreeNode) drawxml(indent string, flags map[string]interface{}, out *bytes.Buffer) {
 	filetype := getFileType(node.Info)
 	name := node.Info.Name()
 	if hasPath := *(flags[constant.Path].(*bool)); hasPath || node.Root == nil {
@@ -202,7 +202,7 @@ func (node *TreeNode) drawXmlTree(indent string, flags map[string]interface{}, o
 	if len(node.Children) > 0 {
 		fmt.Fprintf(out, "%s>\n", line)
 		for _, child := range node.Children {
-			child.drawXmlTree(indent+strings.Repeat(" ", 2), flags, out)
+			child.drawxml(indent+strings.Repeat(" ", 2), flags, out)
 		}
 		fmt.Fprintf(out, "%s</%s>\n", indent, filetype)
 	} else {
