@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"go-tree/constant"
+	"os"
 	"strings"
 )
 
@@ -55,6 +56,7 @@ func (t *Tree) draw() {
 	// build directory tree map
 	if err := t.Root.BuildTree(t.Flags, &t.Summary); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	indent := ""
@@ -114,8 +116,8 @@ func (t *Tree) printXmlTree() {
 func (t *Tree) printJsonTree() {
 	newline := fmt.Sprintf("\n")
 	// print without indentation
-	hasIndent := *(t.Flags[constant.Indent].(*bool))
-	if hasIndent {
+	noIndent := *(t.Flags[constant.Indent].(*bool))
+	if noIndent {
 		newline = ""
 	}
 	fmt.Printf("[%s", newline)
@@ -123,7 +125,7 @@ func (t *Tree) printJsonTree() {
 	fmt.Printf(",%s", newline)
 	// print summary report
 	indent := strings.Repeat(" ", 2)
-	if hasIndent {
+	if noIndent {
 		indent = ""
 	}
 	fmt.Printf("%s{\"type\":\"report\",\"directories\":%v", indent, t.Summary.Directories)

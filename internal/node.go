@@ -43,7 +43,6 @@ func (node *TreeNode) BuildTree(flags map[string]interface{}, summary *TreeSumma
 
 	// Skip hidden files and directories
 	files = exceptHiddens(files)
-
 	// list of directories
 	dirs := justDirs(files)
 	// Add to tree summary
@@ -69,8 +68,8 @@ func (node *TreeNode) BuildTree(flags map[string]interface{}, summary *TreeSumma
 		info := getFileInfo(file)
 		childNode := NewTreeNode(node, nil, node.Depth+1, isLast, path, info)
 
-		maxDepth := *(flags[constant.Level].(*int))
 		// Build tree upto max level
+		maxDepth := *(flags[constant.Level].(*int))
 		if childNode.Info.IsDir() && (maxDepth == 0 || childNode.Depth < maxDepth) {
 			// Build child node if directory has read permission
 			if childNode.Info.Mode().Perm()&0400 != 0 {
@@ -100,7 +99,7 @@ func (node *TreeNode) draw(indent string, flags map[string]interface{}, out *byt
 // Print line
 func (node *TreeNode) print(indent string, flags map[string]interface{}, out *bytes.Buffer) {
 	// print without indentation
-	if hasIndent := *(flags[constant.Indent].(*bool)); hasIndent {
+	if noIndent := *(flags[constant.Indent].(*bool)); noIndent {
 		indent = ""
 	}
 	name := filepath.Base(node.Path)
@@ -148,8 +147,8 @@ func (node *TreeNode) addSuffix(prefix string) string {
 // Prints the directory tree in JSON format
 func (node *TreeNode) drawjson(indent string, flags map[string]interface{}, out *bytes.Buffer) {
 	// print without indentation
-	hasIndent := *(flags[constant.Indent].(*bool))
-	if hasIndent {
+	noIndent := *(flags[constant.Indent].(*bool))
+	if noIndent {
 		indent = ""
 	}
 	filetype := getFileType(node.Info)
@@ -165,19 +164,19 @@ func (node *TreeNode) drawjson(indent string, flags map[string]interface{}, out 
 	if len(node.Children) > 0 {
 		line = fmt.Sprintf("%s,\"contents\":[", line)
 		fmt.Fprintf(out, "%s", line)
-		if !hasIndent {
+		if !noIndent {
 			fmt.Fprintf(out, "\n")
 		}
 		for i, child := range node.Children {
 			if i > 0 {
 				fmt.Fprintf(out, ",")
-				if !hasIndent {
+				if !noIndent {
 					fmt.Fprintf(out, "\n")
 				}
 			}
 			child.drawjson(indent+strings.Repeat(" ", 2), flags, out)
 		}
-		if !hasIndent {
+		if !noIndent {
 			fmt.Fprintf(out, "\n")
 		}
 		fmt.Fprintf(out, "%s]", indent)
