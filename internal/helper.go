@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func isValid(rootPath string) (fs.FileInfo, error) {
+func IsValid(rootPath string) (fs.FileInfo, error) {
 	fileInfo, err := os.Stat(rootPath)
 	var dir, file int
 	invalid := false
@@ -83,4 +83,12 @@ func hasReadPermission(file fs.DirEntry) bool {
 		return true
 	}
 	return false
+}
+
+func getFileType(f fs.FileInfo) string {
+	filetype := "directory"
+	if !f.IsDir() {
+		filetype = "file"
+	}
+	return filetype
 }

@@ -28,8 +28,9 @@ func init() {
 	flags[constant.Level] = goTree.PersistentFlags().IntP(constant.Level, "L", 0, "Max level of tree depth")
 	flags[constant.Mode] = goTree.PersistentFlags().BoolP(constant.Mode, "p", false, "Flag to show permission modes")
 	flags[constant.Time] = goTree.PersistentFlags().BoolP(constant.Time, "t", false, "Flag to sort output by modified time")
-	//XML/JSON Output
-	//Do not print the indentation lines
+	flags[constant.JSON] = goTree.PersistentFlags().BoolP(constant.JSON, "J", false, "Prints tree in JSON format")
+	flags[constant.XML] = goTree.PersistentFlags().BoolP(constant.XML, "X", false, "Prints tree in XML format")
+	flags[constant.Indent] = goTree.PersistentFlags().BoolP(constant.Indent, "i", false, "Prints tree without indentation lines")
 }
 
 func Execute() {
