@@ -105,9 +105,9 @@ func (t *Tree) printXmlTree() {
 		indent = ""
 	}
 	fmt.Printf("%s<report>%s", indent, newline)
-	fmt.Printf("%s<directories>%v</directories>%s", indent+strings.Repeat(" ", 2), t.Summary.Directories, newline)
+	fmt.Printf("%s<directories>%v</directories>%s", strings.Repeat(indent, 2), t.Summary.Directories, newline)
 	if justDirs := *(t.Flags[constant.Dir].(*bool)); !justDirs {
-		fmt.Printf("%s<files>%v</files>%s", indent+strings.Repeat(" ", 2), t.Summary.Files, newline)
+		fmt.Printf("%s<files>%v</files>%s", strings.Repeat(indent, 2), t.Summary.Files, newline)
 	}
 	fmt.Printf("%s</report>%s", indent, newline)
 	fmt.Printf("</tree>%s", newline)

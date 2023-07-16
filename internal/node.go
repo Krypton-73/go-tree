@@ -146,10 +146,12 @@ func (node *TreeNode) addSuffix(prefix string) string {
 
 // Prints the directory tree in JSON format
 func (node *TreeNode) drawjson(indent string, flags map[string]interface{}, out *bytes.Buffer) {
+	newline := fmt.Sprintf("\n")
 	// print without indentation
 	noIndent := *(flags[constant.Indent].(*bool))
 	if noIndent {
 		indent = ""
+		newline = ""
 	}
 	filetype := getFileType(node.Info)
 	name := node.Info.Name()
@@ -163,23 +165,14 @@ func (node *TreeNode) drawjson(indent string, flags map[string]interface{}, out 
 
 	if len(node.Children) > 0 {
 		line = fmt.Sprintf("%s,\"contents\":[", line)
-		fmt.Fprintf(out, "%s", line)
-		if !noIndent {
-			fmt.Fprintf(out, "\n")
-		}
+		fmt.Fprintf(out, "%s%s", line, newline)
 		for i, child := range node.Children {
 			if i > 0 {
-				fmt.Fprintf(out, ",")
-				if !noIndent {
-					fmt.Fprintf(out, "\n")
-				}
+				fmt.Fprintf(out, ",%s", newline)
 			}
 			child.drawjson(indent+strings.Repeat(" ", 2), flags, out)
 		}
-		if !noIndent {
-			fmt.Fprintf(out, "\n")
-		}
-		fmt.Fprintf(out, "%s]", indent)
+		fmt.Fprintf(out, "%s%s]", newline, indent)
 	} else {
 		fmt.Fprintf(out, line)
 	}
@@ -188,6 +181,12 @@ func (node *TreeNode) drawjson(indent string, flags map[string]interface{}, out 
 
 // Prints the directory tree in XML format.
 func (node *TreeNode) drawxml(indent string, flags map[string]interface{}, out *bytes.Buffer) {
+	newline := fmt.Sprintf("\n")
+	noIndent := *(flags[constant.Indent].(*bool))
+	if noIndent {
+		indent = ""
+		newline = ""
+	}
 	filetype := getFileType(node.Info)
 	name := node.Info.Name()
 	if hasPath := *(flags[constant.Path].(*bool)); hasPath || node.Root == nil {
@@ -199,12 +198,12 @@ func (node *TreeNode) drawxml(indent string, flags map[string]interface{}, out *
 	}
 
 	if len(node.Children) > 0 {
-		fmt.Fprintf(out, "%s>\n", line)
+		fmt.Fprintf(out, "%s>%s", line, newline)
 		for _, child := range node.Children {
 			child.drawxml(indent+strings.Repeat(" ", 2), flags, out)
 		}
-		fmt.Fprintf(out, "%s</%s>\n", indent, filetype)
+		fmt.Fprintf(out, "%s</%s>%s", indent, filetype, newline)
 	} else {
-		fmt.Fprintf(out, "%s></%s>\n", line, filetype)
+		fmt.Fprintf(out, "%s></%s>%s", line, filetype, newline)
 	}
 }
