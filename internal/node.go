@@ -106,7 +106,7 @@ func (node *TreeNode) print(indent string, flags map[string]interface{}, out *by
 	}
 
 	// print file permissions
-	if hasMode := *(flags[constant.Mode].(*bool)); hasMode && node.Root != nil {
+	if hasMode := *(flags[constant.Permission].(*bool)); hasMode && node.Root != nil {
 		name = fmt.Sprintf("[%v] %v", node.Info.Mode(), name)
 	}
 
@@ -157,7 +157,7 @@ func (node *TreeNode) drawJsonTree(indent string, flags map[string]interface{}, 
 		name = node.Path
 	}
 	line := fmt.Sprintf("%s{\"type\":\"%s\",\"name\":\"%s\"", indent, filetype, name)
-	if hasMode := *(flags[constant.Mode].(*bool)); hasMode {
+	if hasMode := *(flags[constant.Permission].(*bool)); hasMode {
 		line = fmt.Sprintf("%s,\"mode\":\"%04o\",\"prot\":\"%v\"", line, node.Info.Mode().Perm(), node.Info.Mode())
 	}
 
@@ -195,7 +195,7 @@ func (node *TreeNode) drawXmlTree(indent string, flags map[string]interface{}, o
 		name = node.Path
 	}
 	line := fmt.Sprintf("%s<%s name=\"%s\"", indent, filetype, name)
-	if hasMode := *(flags[constant.Mode].(*bool)); hasMode {
+	if hasMode := *(flags[constant.Permission].(*bool)); hasMode {
 		line = fmt.Sprintf("%s mode=\"%04o\" prot=\"%v\"", line, node.Info.Mode().Perm(), node.Info.Mode())
 	}
 
