@@ -198,10 +198,7 @@ func (node *TreeNode) drawxml(indent string, flags map[string]interface{}, out *
 	}
 
 	if len(node.Children) > 0 {
-		fmt.Fprintf(out, "%s>%s", line, newline)
-		if noIndent && node.Root == nil {
-			fmt.Fprintf(out, "\n")
-		}
+		fmt.Fprintf(out, "%s>\n", line)
 		for _, child := range node.Children {
 			child.drawxml(indent+strings.Repeat(" ", 2), flags, out)
 		}
